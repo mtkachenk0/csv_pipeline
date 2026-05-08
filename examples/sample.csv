@@ -1,0 +1,6 @@
+name,email,age
+Alice,alice@example.com,30
+Bob,BOB@EXAMPLE.COM,17
+,invalid-email,
+Charlie,charlie@example.com,
+,  ,25
