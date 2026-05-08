@@ -133,6 +133,58 @@ RSpec.describe "CSV Pipeline integration" do
     end
   end
 
+  context "edge cases with inline CSV content" do
+    def pipeline_for(*fields)
+      Pipeline.new do
+        fields.each { |f| field(f) }
+      end
+    end
+
+    def with_csv(content)
+      require "tempfile"
+      f = Tempfile.new(["edge", ".csv"])
+      f.write(content)
+      f.flush
+      yield f.path
+    ensure
+      f.close
+      f.unlink
+    end
+
+    it "returns empty array for headers-only file (zero data rows)" do
+      with_csv("name,email\n") do |path|
+        results = pipeline_for(:name, :email).process(path)
+        expect(results).to eq([])
+      end
+    end
+
+    it "returns empty array for completely empty file" do
+      with_csv("") do |path|
+        results = pipeline_for(:name).process(path)
+        expect(results).to eq([])
+      end
+    end
+
+    it "parses quoted fields containing commas as a single value" do
+      with_csv("name,role\n\"Smith, Jr.\",admin\n") do |path|
+        results = pipeline_for(:name, :role).process(path)
+        expect(results.length).to eq(1)
+        expect(results.first.record[:name]).to eq("Smith, Jr.")
+      end
+    end
+
+    it "passes UTF-8 multi-byte characters through unchanged" do
+      with_csv("name,city\nAndré,北京\ncafé,Zürich\n") do |path|
+        results = pipeline_for(:name, :city).process(path)
+        expect(results.length).to eq(2)
+        expect(results[0].record[:name]).to eq("André")
+        expect(results[0].record[:city]).to eq("北京")
+        expect(results[1].record[:name]).to eq("café")
+        expect(results[1].record[:city]).to eq("Zürich")
+      end
+    end
+  end
+
   context "payload access for cross-field logic" do
     it "skips validation when guard field is blank" do
       Pipeline.define_policy(:required_when_named) do
