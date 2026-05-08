@@ -34,6 +34,45 @@ pipeline.process("data.csv").each do |result|
 end
 ```
 
+## Header Mapping
+
+By default, the pipeline reads CSVs with `header_converters: :symbol` — column names become symbols automatically (`"Full Name"` → `:full_name` is **not** done; it stays as-is after symbolization).
+
+Use `header_map` inside the pipeline block to rename or reindex columns before field policies run.
+
+### String headers (messy column names)
+
+Map raw header strings to the symbols your `field` declarations expect:
+
+```ruby
+# CSV: Full Name,E-Mail
+# alice,alice@example.com
+
+pipeline = Pipeline.new do
+  header_map(name: 'Full Name', email: 'E-Mail')
+  field(:name).present
+  field(:email).email.present
+end
+```
+
+Works with headers containing spaces, parentheses, or any special characters.
+
+### Positional mapping (no header row)
+
+When the CSV has no header row, map by zero-based column index. The pipeline detects integer values and skips header parsing entirely:
+
+```ruby
+# CSV (no header): alice,alice@example.com,30
+
+pipeline = Pipeline.new do
+  header_map(name: 0, email: 1, age: 2)
+  field(:name).present
+  field(:email).email
+end
+```
+
+The detection is automatic — if **all** values in the mapping are integers, positional mode is used; if all are strings, header-name mode is used.
+
 ## Error Handling
 
 By default the pipeline continues to remaining policies when a block raises. To stop field processing at the first exception, pass `on_error: :stop`:
