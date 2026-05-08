@@ -5,7 +5,7 @@ module CsvPipeline
     attr_reader :name, :policies
 
     def initialize(name)
-      @name     = name.to_sym
+      @name = name.to_sym
       @policies = []
     end
 
@@ -14,10 +14,13 @@ module CsvPipeline
       self
     end
 
-    def present         = apply(:present)
-    def normalize_email = apply(:normalize_email)
-    def format(regexp)  = apply(:format, regexp)
-    def default(value)  = apply(:default, value)
+    def present = apply(:present)
+
+    def email = apply(:email)
+
+    def format(regexp) = apply(:format, regexp)
+
+    def default(value) = apply(:default, value)
 
     def process(record, on_error: :continue)
       errors = []
@@ -25,6 +28,7 @@ module CsvPipeline
         begin
           value = record[@name]
           next unless policy.eligible?(@name, value, record)
+
           record[@name] = policy.transform(@name, value, record)
           value = record[@name]
           unless policy.valid?(@name, value, record)

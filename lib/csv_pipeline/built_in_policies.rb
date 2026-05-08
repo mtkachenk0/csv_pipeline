@@ -18,7 +18,7 @@ module CsvPipeline
         transform { |_key, _value, _payload| fill.respond_to?(:call) ? fill.call : fill }
       end
 
-      Pipeline.define_policy(:normalize_email) do
+      Pipeline.define_policy(:email) do
         transform { |_key, value, _payload| value.to_s.downcase.strip }
       end
     end

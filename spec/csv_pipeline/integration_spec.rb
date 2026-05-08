@@ -9,7 +9,7 @@ RSpec.describe "CSV Pipeline integration" do
 
   let(:pipeline) do
     Pipeline.new do
-      field(:email).normalize_email.present.format(EMAIL_REGEXP)
+      field(:email).email.present.format(EMAIL_REGEXP)
       field(:name).present
       field(:age).default("unknown")
     end
