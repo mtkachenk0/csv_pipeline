@@ -107,6 +107,32 @@ RSpec.describe "CSV Pipeline integration" do
     end
   end
 
+  context "default with callable fill" do
+    it "evaluates proc per row, not at definition time" do
+      call_count = 0
+      field = CsvPipeline::Field.new(:status)
+      field.apply(:default, -> { call_count += 1; "computed_#{call_count}" })
+
+      r1 = { status: "" }
+      r2 = { status: "" }
+      r3 = { status: "" }
+      field.process(r1)
+      field.process(r2)
+      field.process(r3)
+
+      expect(r1[:status]).to eq("computed_1")
+      expect(r2[:status]).to eq("computed_2")
+      expect(r3[:status]).to eq("computed_3")
+    end
+
+    it "static value still works unchanged" do
+      pipeline = Pipeline.new { field(:age).default("fallback") }
+      results  = pipeline.process(csv_path)
+      blank_age_result = results.find { |r| r.record[:age] == "fallback" }
+      expect(blank_age_result).not_to be_nil
+    end
+  end
+
   context "payload access for cross-field logic" do
     it "skips validation when guard field is blank" do
       Pipeline.define_policy(:required_when_named) do

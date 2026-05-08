@@ -15,7 +15,7 @@ module CsvPipeline
 
       Pipeline.define_policy(:default) do |fill|
         eligible  { |_key, value, _payload| value.to_s.strip.empty? }
-        transform { |_key, _value, _payload| fill }
+        transform { |_key, _value, _payload| fill.respond_to?(:call) ? fill.call : fill }
       end
 
       Pipeline.define_policy(:normalize_email) do
