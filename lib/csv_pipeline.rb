@@ -9,3 +9,8 @@ require_relative "csv_pipeline/policy_registry"
 require_relative "csv_pipeline/result"
 require_relative "csv_pipeline/field"
 require_relative "csv_pipeline/pipeline"
+require_relative "csv_pipeline/built_in_policies"
+
+CsvPipeline::BuiltInPolicies.register!
+
+Pipeline = CsvPipeline::Pipeline
