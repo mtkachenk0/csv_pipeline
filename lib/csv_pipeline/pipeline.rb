@@ -2,13 +2,17 @@
 
 module CsvPipeline
   class Pipeline
+    VALID_ON_ERROR_VALUES = %i[continue stop].freeze
+
     def self.define_policy(name, &factory)
       PolicyRegistry.define(name, &factory)
     end
 
-    def initialize(&block)
+    def initialize(on_error: :continue, &block)
+      raise ArgumentError, "on_error must be :continue or :stop, got #{on_error.inspect}" unless VALID_ON_ERROR_VALUES.include?(on_error)
       @fields     = []
       @header_map = nil
+      @on_error   = on_error
       instance_eval(&block) if block
     end
 
@@ -47,7 +51,7 @@ module CsvPipeline
 
     def append_result(record, results)
       all_errors = []
-      @fields.each { |f| all_errors.concat(f.process(record)) }
+      @fields.each { |f| all_errors.concat(f.process(record, on_error: @on_error)) }
       results << Result.new(record: record, errors: all_errors)
     end
   end
