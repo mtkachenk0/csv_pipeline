@@ -34,6 +34,29 @@ pipeline.process("data.csv").each do |result|
 end
 ```
 
+## Error Handling
+
+By default the pipeline continues to remaining policies when a block raises. To stop field processing at the first exception, pass `on_error: :stop`:
+
+```ruby
+pipeline = Pipeline.new(on_error: :stop) do
+  field(:email).normalize_email.present.format(EMAIL)
+  field(:name).present
+end
+```
+
+When a policy block raises, the error entry gains an `:exception` key alongside the standard `:field` and `:message`:
+
+```ruby
+# validation failure (normal):
+result.errors # => [{ field: :email, message: "email has invalid format" }]
+
+# policy block raised:
+result.errors # => [{ field: :email, message: "ZeroDivisionError: divided by 0", exception: #<ZeroDivisionError: divided by 0> }]
+```
+
+Valid values for `on_error:` are `:continue` (default) and `:stop`. Any other value raises `ArgumentError` at pipeline construction time.
+
 ## Built-in Policies
 
 | Policy | Type | Description |
@@ -109,7 +132,7 @@ result.errors   # => [{ field: :email, message: "email has invalid format" }]
 
 **`payload` in every block.** All four blocks receive the full record. This unlocks cross-field logic (conditionals, comparisons) without a separate "cross-field validation" concept.
 
-**Error aggregation.** The pipeline never stops early. Every field and every policy runs. `result.errors` is always the complete picture for that row.
+**Error aggregation.** By default every field and every policy runs — `result.errors` is always the complete picture for that row. Pass `on_error: :stop` to `Pipeline.new` to halt a field's policy chain at the first exception; other fields still process fully. If a policy block raises, the error entry includes an `:exception` key with the original exception object.
 
 **Duck-typed extensibility.** `apply(:name)` resolves any registered name. Custom policies are first-class — indistinguishable from built-ins at the call site. Adding a new policy requires zero changes to library code.
 

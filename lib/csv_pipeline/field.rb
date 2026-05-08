@@ -19,15 +19,20 @@ module CsvPipeline
     def format(regexp)  = apply(:format, regexp)
     def default(value)  = apply(:default, value)
 
-    def process(record)
+    def process(record, on_error: :continue)
       errors = []
       @policies.each do |policy|
-        value = record[@name]
-        next unless policy.eligible?(@name, value, record)
-        record[@name] = policy.transform(@name, value, record)
-        value = record[@name]
-        unless policy.valid?(@name, value, record)
-          errors << { field: @name, message: policy.message(@name, value, record) }
+        begin
+          value = record[@name]
+          next unless policy.eligible?(@name, value, record)
+          record[@name] = policy.transform(@name, value, record)
+          value = record[@name]
+          unless policy.valid?(@name, value, record)
+            errors << { field: @name, message: policy.message(@name, value, record) }
+          end
+        rescue StandardError => e
+          errors << { field: @name, message: "#{e.class}: #{e.message}", exception: e }
+          break if on_error == :stop
         end
       end
       errors

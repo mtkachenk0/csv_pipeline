@@ -33,6 +33,18 @@ RSpec.describe CsvPipeline::PolicyRegistry do
       expect { described_class.fetch(:unknown) }
         .to raise_error(KeyError, /unknown/)
     end
+
+    it "raises ArgumentError when defining a policy with a duplicate name" do
+      described_class.define(:shout) { transform { |_k, v, _p| v.upcase } }
+      expect { described_class.define(:shout) { transform { |_k, v, _p| v.downcase } } }
+        .to raise_error(ArgumentError, /shout/)
+    end
+
+    it "does not overwrite the original policy when duplicate is attempted" do
+      described_class.define(:shout) { transform { |_k, v, _p| v.upcase } }
+      described_class.define(:shout) { transform { |_k, v, _p| v.downcase } } rescue nil
+      expect(described_class.fetch(:shout).transform(:x, "Hello", {})).to eq("HELLO")
+    end
   end
 
   describe ".reset!" do

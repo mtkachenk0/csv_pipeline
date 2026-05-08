@@ -107,6 +107,84 @@ RSpec.describe "CSV Pipeline integration" do
     end
   end
 
+  context "default with callable fill" do
+    it "evaluates proc per row, not at definition time" do
+      call_count = 0
+      field = CsvPipeline::Field.new(:status)
+      field.apply(:default, -> { call_count += 1; "computed_#{call_count}" })
+
+      r1 = { status: "" }
+      r2 = { status: "" }
+      r3 = { status: "" }
+      field.process(r1)
+      field.process(r2)
+      field.process(r3)
+
+      expect(r1[:status]).to eq("computed_1")
+      expect(r2[:status]).to eq("computed_2")
+      expect(r3[:status]).to eq("computed_3")
+    end
+
+    it "static value still works unchanged" do
+      pipeline = Pipeline.new { field(:age).default("fallback") }
+      results  = pipeline.process(csv_path)
+      blank_age_result = results.find { |r| r.record[:age] == "fallback" }
+      expect(blank_age_result).not_to be_nil
+    end
+  end
+
+  context "edge cases with inline CSV content" do
+    def pipeline_for(*fields)
+      Pipeline.new do
+        fields.each { |f| field(f) }
+      end
+    end
+
+    def with_csv(content)
+      require "tempfile"
+      f = Tempfile.new(["edge", ".csv"])
+      f.write(content)
+      f.flush
+      yield f.path
+    ensure
+      f.close
+      f.unlink
+    end
+
+    it "returns empty array for headers-only file (zero data rows)" do
+      with_csv("name,email\n") do |path|
+        results = pipeline_for(:name, :email).process(path)
+        expect(results).to eq([])
+      end
+    end
+
+    it "returns empty array for completely empty file" do
+      with_csv("") do |path|
+        results = pipeline_for(:name).process(path)
+        expect(results).to eq([])
+      end
+    end
+
+    it "parses quoted fields containing commas as a single value" do
+      with_csv("name,role\n\"Smith, Jr.\",admin\n") do |path|
+        results = pipeline_for(:name, :role).process(path)
+        expect(results.length).to eq(1)
+        expect(results.first.record[:name]).to eq("Smith, Jr.")
+      end
+    end
+
+    it "passes UTF-8 multi-byte characters through unchanged" do
+      with_csv("name,city\nAndré,北京\ncafé,Zürich\n") do |path|
+        results = pipeline_for(:name, :city).process(path)
+        expect(results.length).to eq(2)
+        expect(results[0].record[:name]).to eq("André")
+        expect(results[0].record[:city]).to eq("北京")
+        expect(results[1].record[:name]).to eq("café")
+        expect(results[1].record[:city]).to eq("Zürich")
+      end
+    end
+  end
+
   context "payload access for cross-field logic" do
     it "skips validation when guard field is blank" do
       Pipeline.define_policy(:required_when_named) do

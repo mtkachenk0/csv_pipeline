@@ -5,7 +5,9 @@ module CsvPipeline
     @policies = {}
 
     def self.define(name, &factory)
-      @policies[name.to_sym] = PolicyDefinition.new(&factory)
+      key = name.to_sym
+      raise ArgumentError, "Policy #{key.inspect} already defined" if @policies.key?(key)
+      @policies[key] = PolicyDefinition.new(&factory)
     end
 
     def self.fetch(name, *args)
