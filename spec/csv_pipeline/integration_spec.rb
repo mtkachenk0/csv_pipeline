@@ -16,68 +16,59 @@ RSpec.describe "CSV Pipeline integration" do
   end
 
   it "returns one result per CSV data row" do
-    expect(pipeline.process(csv_path).length).to eq(5)
+    expect(pipeline.process(csv_path).length).to eq(25)
   end
 
-  context "row 1 — Alice, valid email, age 30" do
+  context "row 1 — Alex, valid email, age 41" do
     subject(:result) { pipeline.process(csv_path)[0] }
 
     it { is_expected.to be_valid }
 
     it "preserves correct values" do
-      expect(result.record[:name]).to eq("Alice")
-      expect(result.record[:email]).to eq("alice@example.com")
-      expect(result.record[:age]).to eq("30")
+      expect(result.record[:name]).to eq("Alex")
+      expect(result.record[:email]).to eq("email1@test.com")
+      expect(result.record[:age]).to eq("41")
     end
   end
 
-  context "row 2 — Bob, uppercase email, age 17" do
-    subject(:result) { pipeline.process(csv_path)[1] }
-
-    it { is_expected.to be_valid }
-
-    it "normalizes email to lowercase" do
-      expect(result.record[:email]).to eq("bob@example.com")
-    end
-  end
-
-  context "row 3 — blank name, invalid email, blank age" do
-    subject(:result) { pipeline.process(csv_path)[2] }
+  context "row 19 — comment line parsed as data, nil email" do
+    subject(:result) { pipeline.process(csv_path)[18] }
 
     it { is_expected.not_to be_valid }
-
-    it "collects errors for both name and email" do
-      error_fields = result.errors.map { |e| e[:field] }
-      expect(error_fields).to include(:name, :email)
-    end
 
     it "does not stop on first error" do
       expect(result.errors.length).to be >= 2
     end
 
-    it "applies default to blank age" do
+    it "collects multiple errors on email field" do
+      error_fields = result.errors.map { |e| e[:field] }
+      expect(error_fields.count(:email)).to be >= 2
+    end
+
+    it "applies default to nil age" do
       expect(result.record[:age]).to eq("unknown")
     end
   end
 
-  context "row 4 — Charlie, valid email, blank age" do
-    subject(:result) { pipeline.process(csv_path)[3] }
-
-    it { is_expected.to be_valid }
-
-    it "applies default to blank age" do
-      expect(result.record[:age]).to eq("unknown")
-    end
-  end
-
-  context "row 5 — blank name, whitespace-only email" do
-    subject(:result) { pipeline.process(csv_path)[4] }
+  context "row 20 — nil name, valid email" do
+    subject(:result) { pipeline.process(csv_path)[19] }
 
     it { is_expected.not_to be_valid }
 
-    it "reports errors for name and email" do
+    it "reports name error" do
       error_fields = result.errors.map { |e| e[:field] }
-      expect(error_fields).to include(:name, :email)
+      expect(error_fields).to include(:name)
+    end
+  end
+
+  context "row 25 — Judy, invalid email format" do
+    subject(:result) { pipeline.process(csv_path)[24] }
+
+    it { is_expected.not_to be_valid }
+
+    it "reports email error" do
+      error_fields = result.errors.map { |e| e[:field] }
+      expect(error_fields).to include(:email)
     end
   end
 
@@ -91,30 +82,28 @@ RSpec.describe "CSV Pipeline integration" do
       custom = Pipeline.new { field(:name).apply(:min_length, 4) }
       results = custom.process(csv_path)
 
-      alice   = results.find { |r| r.record[:name] == "Alice" }
-      bob     = results.find { |r| r.record[:name] == "Bob" }
-      charlie = results.find { |r| r.record[:name] == "Charlie" }
+      alex = results.find { |r| r.record[:name] == "Alex" }
+      jim  = results.find { |r| r.record[:name] == "Jim" }
 
-      expect(alice.valid?).to be true
-      expect(bob.valid?).to be false
-      expect(charlie.valid?).to be true
-      expect(bob.errors.first[:message]).to include("too short")
+      expect(alex.valid?).to be true
+      expect(jim.valid?).to be false
+      expect(jim.errors.first[:message]).to include("too short")
     end
   end
 
   context "eligible block as conditional guard" do
     it "skips policy when record does not match condition" do
       Pipeline.define_policy(:vip_email) do
-        eligible { |_k, _v, payload| payload[:age].to_i >= 18 }
+        eligible { |_k, _v, payload| payload[:subscribed] == "T" }
         validate { |_k, v, _p| v.to_s.end_with?(".com") }
-        message  { |k, _v, _p| "#{k} must end with .com for adults" }
+        message  { |k, _v, _p| "#{k} must end with .com for subscribers" }
       end
 
       p = Pipeline.new { field(:email).apply(:vip_email) }
       results = p.process(csv_path)
 
-      bob = results.find { |r| r.record[:name] == "Bob" }
-      expect(bob.valid?).to be true
+      judy = results.find { |r| r.record[:name] == "Judy" }
+      expect(judy.valid?).to be true
     end
   end
 

@@ -40,13 +40,27 @@ RSpec.describe CsvPipeline::Pipeline do
     it "returns one Result per CSV data row" do
       pipeline = described_class.new { field(:name).present }
       results  = pipeline.process(csv_path)
-      expect(results.length).to eq(5)
+      expect(results.length).to eq(25)
     end
 
     it "returns Result objects" do
       pipeline = described_class.new { field(:name) }
       results  = pipeline.process(csv_path)
       expect(results).to all(be_a(CsvPipeline::Result))
+    end
+
+    it "does not modify the original CSV source data" do
+      described_class.define_policy(:upcase) do
+        transform { |_k, v, _p| v.to_s.upcase }
+      end
+
+      pipeline = described_class.new { field(:name).apply(:upcase) }
+      results  = pipeline.process(csv_path)
+
+      expect(results.first.record[:name]).to eq("ALEX")
+
+      raw = CSV.read(csv_path, headers: true).first
+      expect(raw["Name"]).to eq("Alex")
     end
 
     it "accumulates errors from all fields without stopping" do

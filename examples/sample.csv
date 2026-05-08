@@ -1,6 +1,26 @@
-name,email,age
-Alice,alice@example.com,30
-Bob,BOB@EXAMPLE.COM,17
-,invalid-email,
-Charlie,charlie@example.com,
-,  ,25
+"Name","Sex","Age","Height (cm)","Weight (kg)","Email","Subscribed"
+"Alex","M",41,188.0,77.1,"email1@test.com",T
+"Bert","M",42,172.7,75.3,"email2@test.com",F
+"Carl","M",32,177.8,70.3,"email3@test.com",
+"Dave","M",39,182.9,75.7,"email4@test.com",T
+"Elly","F",30,167.6,56.2,"email5@test.com",F
+"Fran","F",33,167.6,52.2,"email6@test.com",
+"Gwen","F",26,162.6,54.9,"email7@test.com",T
+"Hank","M",30,180.3,71.7,"email8@test.com",F
+"Ivan","M",53,182.9,79.4,"email9@test.com",
+"Jake","M",32,175.3,64.9,"email10@test.com",T
+"Kate","F",47,175.3,63.0,"email11@test.com",F
+"Luke","M",34,182.9,73.9,"email12@test.com",
+"Myra","F",23,157.5,44.5,"email13@test.com",T
+"Neil","M",36,190.5,72.6,"email14@test.com",F
+"Omar","M",38,177.8,65.8,"email15@test.com",
+"Page","F",31,170.2,61.2,"email16@test.com",T
+"Quin","M",29,180.3,79.8,"email17@test.com",F
+"Ruth","F",28,165.1,59.4,"email18@test.com",
+# invalid values below, this line also expected to be ignored
+,M,41,188,77,invalidname@mail.com
+"John",,31,188,77,invalidsex@mail.com
+"Jack",X,31,188,77,invalidsex2@mail.com
+"Jim",M,-30,188,77,negativeage@mail.com
+"Jane",W,10,0,0,negative_height_and_wieght@mail.com
+"Judy","W",41,188,77.1,invalidemail
