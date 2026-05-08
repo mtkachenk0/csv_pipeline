@@ -29,7 +29,7 @@ pipeline = Pipeline.new do
   field(:age).present.apply(:positive_integer)
   field(:height_cm).present.apply(:positive_number)
   field(:weight_kg).present.apply(:positive_number)
-  field(:email).normalize_email.present.format(EMAIL_REGEXP)
+  field(:email).email.present.format(EMAIL_REGEXP)
   field(:subscribed).default("F")
 end
 

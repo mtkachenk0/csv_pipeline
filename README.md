@@ -20,7 +20,7 @@ require "csv_pipeline"
 EMAIL = /\A[^@\s]+@[^@\s]+\.[^@\s]+\z/
 
 pipeline = Pipeline.new do
-  field(:email).normalize_email.present.format(EMAIL)
+  field(:email).email.present.format(EMAIL)
   field(:name).present
   field(:age).default("unknown")
 end
@@ -40,7 +40,7 @@ By default the pipeline continues to remaining policies when a block raises. To 
 
 ```ruby
 pipeline = Pipeline.new(on_error: :stop) do
-  field(:email).normalize_email.present.format(EMAIL)
+  field(:email).email.present.format(EMAIL)
   field(:name).present
 end
 ```
@@ -64,7 +64,9 @@ Valid values for `on_error:` are `:continue` (default) and `:stop`. Any other va
 | `present` | validate | fails when value is blank |
 | `format(regexp)` | validate | fails when value does not match regexp |
 | `default(value)` | transform | sets value when blank; skipped otherwise |
-| `normalize_email` | transform | downcases and strips whitespace |
+| `email` | transform | downcases and strips whitespace |
+
+More built-in policies are planned.
 
 ## Custom Policies
 
@@ -105,6 +107,7 @@ Pipeline.define_policy(:one_of) do |*allowed|
   validate { |_key, value, _payload| allowed.include?(value.to_s) }
   message  { |key,  _value, _payload| "#{key} must be one of: #{allowed.join(', ')}" }
 end
+
 ```
 
 ### Execution order
