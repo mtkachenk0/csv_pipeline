@@ -10,5 +10,6 @@ Gem::Specification.new do |spec|
   spec.files         = Dir["lib/**/*.rb", "README.md"]
   spec.require_paths = ["lib"]
   spec.required_ruby_version = ">= 3.0"
+  spec.add_dependency "csv"
   spec.add_development_dependency "rspec", "~> 3.13"
 end

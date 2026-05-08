@@ -2,3 +2,4 @@
 
 require "csv"
 require_relative "csv_pipeline/version"
+require_relative "csv_pipeline/policy"
