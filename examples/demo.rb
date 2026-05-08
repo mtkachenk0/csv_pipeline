@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'lib/csv_pipeline'
+require_relative '../lib/csv_pipeline'
 
 EMAIL_REGEXP = /\A[^@\s]+@[^@\s]+\.[^@\s]+\z/
 SEX_REGEXP   = /\A(M|F)\z/
@@ -35,7 +35,7 @@ pipeline = Pipeline.new do
   field(:subscribed).default('F')
 end
 
-csv_path = File.expand_path('examples/biostats.csv', __dir__)
+csv_path = File.expand_path('sample.csv', __dir__)
 results  = pipeline.process(csv_path)
 
 valid_count   = results.count(&:valid?)
