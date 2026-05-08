@@ -10,16 +10,16 @@ module CsvPipeline
     end
 
     def transform(&block) = @transform_block = block
-    def validate(&block)  = @validate_block  = block
-    def eligible(&block)  = @eligible_block  = block
-    def message(&block)   = @message_block   = block
+    def validate(&block)  = @validate_block = block
+    def eligible(&block)  = @eligible_block = block
+    def message(&block)   = @message_block = block
 
     def build
       Policy.new(
         transform: @transform_block,
-        validate:  @validate_block,
-        eligible:  @eligible_block,
-        message:   @message_block
+        validate: @validate_block,
+        eligible: @eligible_block,
+        message: @message_block
       )
     end
   end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
-require "csv_pipeline"
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+require 'csv_pipeline'
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|

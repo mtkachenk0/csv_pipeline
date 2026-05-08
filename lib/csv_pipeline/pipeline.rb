@@ -9,7 +9,11 @@ module CsvPipeline
     end
 
     def initialize(on_error: :continue, &block)
-      raise ArgumentError, "on_error must be :continue or :stop, got #{on_error.inspect}" unless VALID_ON_ERROR_VALUES.include?(on_error)
+      unless VALID_ON_ERROR_VALUES.include?(on_error)
+        raise ArgumentError,
+              "on_error must be :continue or :stop, got #{on_error.inspect}"
+      end
+
       @fields     = []
       @header_map = nil
       @on_error   = on_error
